@@ -34,23 +34,9 @@ This produces a fat JAR at:
 target/v2ray-tester-1.0.0-jar-with-dependencies.jar
 ```
 
-You can also use the included helper scripts:
-
-| Script | Platform | Description |
-|--------|----------|-------------|
-| `rebuild.bat` | Windows | Runs `mvn clean compile package` |
-| `rebuildAndStart.bat` | Windows | Rebuilds and immediately runs the app |
-
 ## Running
 
 ### Quick Start
-
-The easiest way to run on any platform is the polyglot launcher script:
-
-```bash
-# Works on both Windows (double-click or CMD) and Linux/macOS
-multistart.bat
-```
 
 ### Platform-Specific Launchers
 
@@ -130,22 +116,22 @@ java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --long-run
 
 ```
 ┌─────────────────────┐
-│  Fetch Subscriptions │  Subscription URLs + freev2ray.cc + (optional) ebrasha list
+│  Fetch Subscriptions│  Subscription URLs + freev2ray.cc + (optional) ebrasha list
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│  Parse Server URLs   │  vmess://, vless://, trojan://, ss:// → ServerConfig objects
+│  Parse Server URLs  │  vmess://, vless://, trojan://, ss:// → ServerConfig objects
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│  Deduplicate & Save  │  Persisted to ~/v2rayservers.json
+│  Deduplicate & Save │  Persisted to ~/v2rayservers.json
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│  Phase 1: TCP Ping   │  Concurrent socket connect to measure latency (2s timeout)
+│  Phase 1: TCP Ping  │  Concurrent socket connect to measure latency (2s timeout)
 └────────┬────────────┘
          │ only reachable servers
          ▼
@@ -155,12 +141,12 @@ java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --long-run
          │
          ▼
 ┌─────────────────────────┐
-│  Score & Rank Servers    │  score = (5000 - ping) × speed
+│  Score & Rank Servers   │  score = (5000 - ping) × speed
 └────────┬────────────────┘
          │
          ▼
 ┌─────────────────────────┐
-│  Output Results          │  all.txt, best.txt, best.png, terminal QR code
+│  Output Results         │  all.txt, best.txt, best.png, terminal QR code
 └─────────────────────────┘
 ```
 

@@ -5,7 +5,7 @@ A Java command-line tool that automatically fetches, parses, and benchmarks V2Ra
 ## Features
 
 - **Multi-protocol support** — vmess, vless, trojan, and shadowsocks (`ss://`) server URLs
-- **Multi-source fetching** — subscription URLs, [freev2ray.cc](https://freev2ray.cc/) scraper, and the [ebrasha public list](https://github.com/ebrasha/free-v2ray-public-list)
+- **Multi-source fetching** — subscription URLs and [freev2ray.cc](https://freev2ray.cc/) scraper
 - **Automated Xray core management** — downloads and extracts the correct Xray binary for your platform from GitHub releases (or uses a locally installed one via `V2RAY_CORE` env / `v2ray.core` property)
 - **Concurrent ping & download testing** — two-phase pipeline: TCP connect ping first, then real download speed through the Xray SOCKS5 proxy
 - **Composite scoring** — ranks servers by `(5000 - ping_ms) * speed_MB/s`, balancing latency and throughput
@@ -78,7 +78,6 @@ Options:
   --add <url>        Add a subscription URL and exit
   --remove <url>     Remove a subscription URL and exit
   --list             List all subscription URLs and exit
-  --long-run         Also fetch server configs from the ebrasha public list
   --no-fetching      Test stored server configs without fetching new ones
   --just-fetch       Fetch and save server configs without testing
 
@@ -106,8 +105,7 @@ java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --no-fetching
 # Fetch configs only (skip testing)
 java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --just-fetch
 
-# Include the ebrasha public list in addition to subscriptions
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --long-run
+
 ```
 
 ## How It Works
@@ -116,7 +114,7 @@ java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --long-run
 
 ```
 ┌─────────────────────┐
-│  Fetch Subscriptions│  Subscription URLs + freev2ray.cc + (optional) ebrasha list
+│  Fetch Subscriptions│  Subscription URLs + freev2ray.cc
 └────────┬────────────┘
          │
          ▼

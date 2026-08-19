@@ -25,7 +25,6 @@ class CliArgs {
         System.out.println("  --add <url>        Add a subscription url and exit");
         System.out.println("  --remove <url>     Remove a subscription url and exit");
         System.out.println("  --list             List all subscription urls and exit");
-        System.out.println("  --long-run         Also fetch server configs from the ebrasha public list");
         System.out.println("  --no-fetching      Test stored server configs without fetching new ones");
         System.out.println("  --just-fetch       Fetch and save server configs without testing");
         System.out.println();

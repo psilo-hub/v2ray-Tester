@@ -137,7 +137,6 @@ public class App {
             return;
         }
 
-        boolean longRun = hasFlag(args, "--long-run");
         boolean noFetching = hasFlag(args, "--no-fetching");
         boolean justFetch = hasFlag(args, "--just-fetch");
         if (justFetch && noFetching) {
@@ -151,7 +150,7 @@ public class App {
         System.out.println(serverConfigs.size() + " old server configs loaded");
 
         // 2. fetch new server configs (unless --no-fetching)
-        if (!noFetching) fetchServerConfigs(SubscriptionManager.loadSubscriptions(), longRun);
+        if (!noFetching) fetchServerConfigs(SubscriptionManager.loadSubscriptions());
 
         // 3. dedupe server configs (the set takes care of that) and save
         saveServerConfigs();
@@ -604,7 +603,7 @@ public class App {
         }, "fetch " + url, 3);
     }
 
-    private static void fetchServerConfigs(Set<String> subscriptions, boolean longRun) throws IOException {
+    private static void fetchServerConfigs(Set<String> subscriptions) throws IOException {
         System.out.println("Got " + subscriptions.size() + " subscription sources to check");
         for (String url : subscriptions) {
             importFromUrl(url);
@@ -615,11 +614,6 @@ public class App {
         Set<String> freeV2RayUrls = FreeV2RayCcScraper.getFreev2rayCcUrls();
         for (String u : freeV2RayUrls) importFromUrl(u);
         saveServerConfigs();
-
-        if (longRun) {
-            importFromUrl("https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/V2Ray-Config-By-EbraSha-All-Type.txt");
-            saveServerConfigs();
-        }
     }
 
     private static void saveServerConfigs() throws IOException {

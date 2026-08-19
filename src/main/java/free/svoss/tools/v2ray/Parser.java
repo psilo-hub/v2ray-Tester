@@ -212,7 +212,10 @@ public final class Parser {
             int colon = hp.lastIndexOf(':');
             host = hp.substring(0, colon);
             try {
-                port = Integer.parseInt(hp.substring(colon + 1));
+                String portStr = hp.substring(colon + 1);
+                int qMark = portStr.indexOf('?');
+                if (qMark >= 0) portStr = portStr.substring(0, qMark);
+                port = Integer.parseInt(portStr);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("invalid port in ss url: " + hp.substring(colon + 1));
             }
@@ -223,7 +226,10 @@ public final class Parser {
             creds = decoded.substring(0, at2);
             host = decoded.substring(at2 + 1, colon);
             try {
-                port = Integer.parseInt(decoded.substring(colon + 1));
+                String portStr = decoded.substring(colon + 1);
+                int qMark = portStr.indexOf('?');
+                if (qMark >= 0) portStr = portStr.substring(0, qMark);
+                port = Integer.parseInt(portStr);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("invalid port in ss url: " + decoded.substring(colon + 1));
             }

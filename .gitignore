@@ -33,3 +33,5 @@ replay_pid*
 /rebuild.bat
 /.idea
 /target
+/scripts/rebuildAndStart.bat
+/scripts/rebuild.bat

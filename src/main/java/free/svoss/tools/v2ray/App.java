@@ -41,7 +41,7 @@ public class App {
     private static final int SCORE_PING_CEILING = 5_000;
     private static final int MAX_SUBSCRIPTION_BODY_BYTES = 100_000_000;
     private static final int SUBSCRIPTION_TIMEOUT_MS = 180_000;
-    private static final long GLOBAL_TEST_TIMEOUT_MS = 600_000; // 10 minutes total budget
+    private static final long GLOBAL_TEST_TIMEOUT_MS = 28_800_000L; // 8 hours total budget per phase
     private static final int POOL_TERMINATION_TIMEOUT_SECONDS = 60;
 
     /** Shared Gson instance — pretty-printed with null serialization. */

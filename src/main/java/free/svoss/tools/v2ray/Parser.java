@@ -307,8 +307,12 @@ public final class Parser {
         for (int i = 0; i < pad; i++) {
             sb.append('=');
         }
-        byte[] bytes = Base64.getDecoder().decode(sb.toString());
-        return new String(bytes, StandardCharsets.UTF_8);
+        try{byte[] bytes = Base64.getDecoder().decode(sb.toString());
+            return new String(bytes, StandardCharsets.UTF_8);
+        }catch (Exception ex){
+            System.err.println("Failed to decode the following b64:\n"+sb+"\n"+ex.getMessage()+"\n");
+            throw ex;
+        }
     }
 
     private static String urlDecode(String s) {

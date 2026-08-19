@@ -35,3 +35,4 @@ replay_pid*
 /target
 /scripts/rebuildAndStart.bat
 /scripts/rebuild.bat
+/.opencode

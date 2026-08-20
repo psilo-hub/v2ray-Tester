@@ -57,6 +57,16 @@ chmod +x start.sh
 java -jar target/v2ray-tester-1.0.0-jar-with-dependencies.jar
 ```
 
+### Adding More Subscription Sources
+
+The tool comes with a default subscription, but you can add your own:
+
+```bash
+java -jar target/v2ray-tester-1.0.0-jar-with-dependencies.jar --add "https://example.com/v2ray-sub"
+```
+
+See [docs/more_sources.txt](docs/more_sources.txt) for a list of known subscription sources. A web search will also reveal many more, and a good starting point is the [v2ray-config topic on GitHub](https://github.com/topics/v2ray-config).
+
 ### What Happens on First Run
 
 1. A default subscription file is created at `~/.v2ray-subscriptions.txt` with the [openproxylist](https://openproxylist.com/v2ray/rawlist/text) source.

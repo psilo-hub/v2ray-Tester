@@ -15,9 +15,9 @@
     <properties>
         <maven.compiler.release>8</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <gson.version>2.10.1</gson.version>
-        <jsoup.version>1.22.1</jsoup.version>
-        <zxing.version>3.5.3</zxing.version>
+        <gson.version>2.14.0</gson.version>
+        <jsoup.version>1.23.1</jsoup.version>
+        <zxing.version>3.5.4</zxing.version>
         <junit.version>5.14.4</junit.version>
     </properties>
 
@@ -90,7 +90,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -110,7 +110,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
+                <version>3.5.6</version>
                 <configuration>
                     <useFile>false</useFile>
                     <printSummary>true</printSummary>

@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Build fat JAR
+        run: mvn -B clean package -DskipTests
+
+      - name: Create source zip
+        run: git archive --format=zip --output=source.zip HEAD
+
+      - name: Collect release assets
+        run: |
+          mkdir -p release
+          cp target/v2ray-tester-1.0.0.jar release/
+          cp source.zip release/
+          cp scripts/start.bat scripts/start.sh release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true

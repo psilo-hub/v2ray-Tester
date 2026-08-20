@@ -1,5 +1,7 @@
 # v2ray-Tester
 
+[![CI](https://github.com/psilo-hub/v2ray-Tester/actions/workflows/ci.yml/badge.svg)](https://github.com/psilo-hub/v2ray-Tester/actions/workflows/ci.yml)
+
 A Java command-line tool that automatically fetches, parses, and benchmarks V2Ray / Xray server configurations. It measures TCP ping latency and real download speed through an Xray SOCKS5 proxy, then ranks servers with a composite score. The best server URL is exported as both a text list and a QR code image.
 
 ## Features

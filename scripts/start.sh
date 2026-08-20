@@ -2,7 +2,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JAR="$SCRIPT_DIR/v2ray-tester-1.0.0-jar-with-dependencies.jar"
+JAR="$SCRIPT_DIR/v2ray-tester-1.0.0.jar"
 
 # --- Check that Java is installed ---
 if ! command -v java >/dev/null 2>&1; then

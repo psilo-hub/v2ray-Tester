@@ -3,7 +3,7 @@ if not "%1"=="max" start /max cmd.exe /c "%~f0 max" & exit /b
 title V2ray Server Tester
 cd /d "%~dp0"
 
-set "JAR=%~dp0v2ray-tester-1.0.0-jar-with-dependencies.jar"
+set "JAR=%~dp0v2ray-tester-1.0.0.jar"
 
 rem --- Check that Java is installed ---
 where java >nul 2>nul

@@ -33,6 +33,7 @@ replay_pid*
 /rebuild.bat
 /.idea
 /target
+dependency-reduced-pom.xml
 /scripts/rebuildAndStart.bat
 /scripts/rebuild.bat
 /.opencode

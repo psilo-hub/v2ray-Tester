@@ -31,7 +31,7 @@ mvn clean package
 This produces a fat JAR at:
 
 ```
-target/v2ray-tester-1.0.0-jar-with-dependencies.jar
+target/v2ray-tester-1.0.0.jar
 ```
 
 ## Running
@@ -54,7 +54,7 @@ chmod +x start.sh
 ### Direct Execution
 
 ```bash
-java -jar target/v2ray-tester-1.0.0-jar-with-dependencies.jar
+java -jar target/v2ray-tester-1.0.0.jar
 ```
 
 ### Adding More Subscription Sources
@@ -62,7 +62,7 @@ java -jar target/v2ray-tester-1.0.0-jar-with-dependencies.jar
 The tool comes with a default subscription, but you can add your own:
 
 ```bash
-java -jar target/v2ray-tester-1.0.0-jar-with-dependencies.jar --add "https://example.com/v2ray-sub"
+java -jar target/v2ray-tester-1.0.0.jar --add "https://example.com/v2ray-sub"
 ```
 
 See [docs/more_sources.txt](docs/more_sources.txt) for a list of known subscription sources. A web search will also reveal many more, and a good starting point is the [v2ray-config topic on GitHub](https://github.com/topics/v2ray-config).
@@ -80,7 +80,7 @@ See [docs/more_sources.txt](docs/more_sources.txt) for a list of known subscript
 ## Command-Line Options
 
 ```
-Usage: java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar [options]
+Usage: java -jar v2ray-tester-1.0.0.jar [options]
 
 Options:
   --help             Print help and exit
@@ -101,19 +101,19 @@ Exit codes:
 
 ```bash
 # Add a subscription
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --add "https://example.com/v2ray-sub"
+java -jar v2ray-tester-1.0.0.jar --add "https://example.com/v2ray-sub"
 
 # List saved subscriptions
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --list
+java -jar v2ray-tester-1.0.0.jar --list
 
 # Remove a subscription
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --remove "https://example.com/v2ray-sub"
+java -jar v2ray-tester-1.0.0.jar --remove "https://example.com/v2ray-sub"
 
 # Test only previously saved servers (no network fetching)
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --no-fetching
+java -jar v2ray-tester-1.0.0.jar --no-fetching
 
 # Fetch configs only (skip testing)
-java -jar v2ray-tester-1.0.0-jar-with-dependencies.jar --just-fetch
+java -jar v2ray-tester-1.0.0.jar --just-fetch
 
 
 ```

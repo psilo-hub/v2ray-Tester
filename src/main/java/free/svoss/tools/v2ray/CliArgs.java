@@ -17,7 +17,7 @@ class CliArgs {
     }
 
     static void printUsage(String appVersion) {
-        System.out.println("Usage: java -jar v2ray-tester-" + appVersion + "-jar-with-dependencies.jar [options]");
+        System.out.println("Usage: java -jar v2ray-tester-" + appVersion + ".jar [options]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  --help             Print this help and exit");

@@ -3,7 +3,10 @@ package free.svoss.tools.v2ray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
 
+import java.io.StringReader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -73,8 +76,8 @@ public final class Parser {
     }
 
     private static ServerConfig parseVmess(String payload, String rawUrl) {
-        String json = base64Decode(payload);
-        JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+        String json = payload.startsWith("{") ? payload : base64Decode(payload);
+        JsonObject obj = parseVmessJsonResilient(json);
 
         ServerConfig.Builder b = ServerConfig.builder()
                 .protocol("vmess")
@@ -151,6 +154,62 @@ public final class Parser {
         return b.build();
     }
 
+    /**
+     * Parse vmess JSON with a 4-step fallback chain:
+     * 1. Strict parse of the decoded string (current behaviour)
+     * 2. Strict parse of the trimmed string (first '{' to last '}')
+     * 3. Lenient parse of the original string
+     * 4. Lenient parse of the trimmed string
+     * Only throws if all four attempts fail.
+     */
+    private static JsonObject parseVmessJsonResilient(String json) {
+        // 1. Strict parse of the full string
+        try {
+            return JsonParser.parseString(json).getAsJsonObject();
+        } catch (JsonSyntaxException ignored) {
+        }
+
+        // 2. Strict parse of trimmed JSON (strip leading/trailing garbage)
+        String trimmed = trimToJsonObject(json);
+        if (trimmed != null) {
+            try {
+                return JsonParser.parseString(trimmed).getAsJsonObject();
+            } catch (JsonSyntaxException ignored) {
+            }
+        }
+
+        // 3. Lenient parse of the full string
+        try {
+            return parseLenient(json);
+        } catch (Exception ignored) {
+        }
+
+        // 4. Lenient parse of trimmed string
+        if (trimmed != null) {
+            try {
+                return parseLenient(trimmed);
+            } catch (Exception ignored) {
+            }
+        }
+
+        throw new IllegalArgumentException("malformed JSON in vmess payload");
+    }
+
+    /** Extract the substring from the first '{' to the last '}', or return null. */
+    private static String trimToJsonObject(String s) {
+        int start = s.indexOf('{');
+        int end = s.lastIndexOf('}');
+        if (start < 0 || end <= start) return null;
+        return s.substring(start, end + 1);
+    }
+
+    /** Parse JSON using a lenient JsonReader (allows comments, trailing tokens, etc.). */
+    private static JsonObject parseLenient(String json) throws Exception {
+        JsonReader reader = new JsonReader(new StringReader(json));
+        reader.setLenient(true);
+        return JsonParser.parseReader(reader).getAsJsonObject();
+    }
+
     private static ServerConfig parseUriBased(String protocol, String rest, String rawUrl) {
         int hashIdx = rest.indexOf('#');
         String main = hashIdx >= 0 ? rest.substring(0, hashIdx) : rest;
@@ -207,7 +266,7 @@ public final class Parser {
         int port;
         int atIdx = main.indexOf('@');
         if (atIdx >= 0) {
-            creds = base64Decode(main.substring(0, atIdx));
+            creds = decodeSsCredentials(main.substring(0, atIdx));
             String hp = main.substring(atIdx + 1);
             int colon = hp.lastIndexOf(':');
             host = hp.substring(0, colon);
@@ -220,7 +279,7 @@ public final class Parser {
                 throw new IllegalArgumentException("invalid port in ss url: " + hp.substring(colon + 1));
             }
         } else {
-            String decoded = base64Decode(main);
+            String decoded = decodeSsPayload(main);
             int at2 = decoded.indexOf('@');
             int colon = decoded.lastIndexOf(':');
             creds = decoded.substring(0, at2);
@@ -248,6 +307,34 @@ public final class Parser {
                 .remark(remark)
                 .rawUrl(rawUrl)
                 .build();
+    }
+
+    /**
+     * Decode the credentials part of an ss:// URL.
+     * First tries base64-decode; if that fails and the input contains ':',
+     * treats it as plain-text method:password.
+     */
+    private static String decodeSsCredentials(String encoded) {
+        try {
+            return base64Decode(encoded);
+        } catch (IllegalArgumentException e) {
+            if (encoded.contains(":")) return encoded;
+            throw e;
+        }
+    }
+
+    /**
+     * Decode the full payload of an ss:// URL (no-@ form: base64(method:password@host:port)).
+     * First tries base64-decode; if that fails and the input contains ':',
+     * treats it as plain-text method:password@host:port.
+     */
+    private static String decodeSsPayload(String encoded) {
+        try {
+            return base64Decode(encoded);
+        } catch (IllegalArgumentException e) {
+            if (encoded.contains(":")) return encoded;
+            throw e;
+        }
     }
 
     private static HostPort parseHostPort(String hostPort) {
@@ -307,12 +394,8 @@ public final class Parser {
         for (int i = 0; i < pad; i++) {
             sb.append('=');
         }
-        try{byte[] bytes = Base64.getDecoder().decode(sb.toString());
-            return new String(bytes, StandardCharsets.UTF_8);
-        }catch (Exception ex){
-            System.err.println("Failed to decode the following b64:\n"+sb+"\n"+ex.getMessage()+"\n");
-            throw ex;
-        }
+        byte[] bytes = Base64.getDecoder().decode(sb.toString());
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private static String urlDecode(String s) {

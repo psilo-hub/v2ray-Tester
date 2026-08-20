@@ -172,7 +172,7 @@ public final class ServerConfig implements Comparable<ServerConfig> {
             }
             if (id == null || id.trim().isEmpty())
                 throw new IllegalStateException("ServerConfig id must not be null or blank");
-            if (protocol.equals("vmess") || protocol.equals("vless")) {
+            if (protocol.equals("vmess")) {
                 try {
                     UUID.fromString(id);
                 } catch (IllegalArgumentException e) {

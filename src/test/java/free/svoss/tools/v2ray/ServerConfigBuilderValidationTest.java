@@ -91,10 +91,8 @@ class ServerConfigBuilderValidationTest {
     }
 
     @Test
-    void vlessNonUuidIdThrows() {
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> baseBuilder().protocol("vless").id("not-a-uuid").build());
-        assertTrue(ex.getMessage().contains("UUID"));
+    void vlessNonUuidIdAccepted() {
+        assertDoesNotThrow(() -> baseBuilder().protocol("vless").id("not-a-uuid").build());
     }
 
     @Test

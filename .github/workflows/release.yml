@@ -20,14 +20,10 @@ jobs:
       - name: Build fat JAR
         run: mvn -B clean package -DskipTests
 
-      - name: Create source zip
-        run: git archive --format=zip --output=source.zip HEAD
-
       - name: Collect release assets
         run: |
           mkdir -p release
           cp target/v2ray-tester-1.0.0.jar release/
-          cp source.zip release/
           cp scripts/start.bat scripts/start.sh release/
 
       - name: Create GitHub Release

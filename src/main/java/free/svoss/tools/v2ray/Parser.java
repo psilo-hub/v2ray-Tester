@@ -223,6 +223,10 @@ public final class Parser {
 
         int qIdx = hostPortQuery.indexOf('?');
         String hostPort = qIdx >= 0 ? hostPortQuery.substring(0, qIdx) : hostPortQuery;
+        // Strip any path portion (e.g. "host:443/" or "host:443/ws") - only the authority remains
+        int slashIdx = hostPort.indexOf('/');
+        if (slashIdx >= 0)
+            hostPort = hostPort.substring(0, slashIdx);
         String query = qIdx >= 0 ? hostPortQuery.substring(qIdx + 1) : null;
 
         HostPort hp = parseHostPort(hostPort);
@@ -274,6 +278,8 @@ public final class Parser {
                 String portStr = hp.substring(colon + 1);
                 int qMark = portStr.indexOf('?');
                 if (qMark >= 0) portStr = portStr.substring(0, qMark);
+                int slash = portStr.indexOf('/');
+                if (slash >= 0) portStr = portStr.substring(0, slash);
                 port = Integer.parseInt(portStr);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("invalid port in ss url: " + hp.substring(colon + 1));
@@ -288,6 +294,8 @@ public final class Parser {
                 String portStr = decoded.substring(colon + 1);
                 int qMark = portStr.indexOf('?');
                 if (qMark >= 0) portStr = portStr.substring(0, qMark);
+                int slash = portStr.indexOf('/');
+                if (slash >= 0) portStr = portStr.substring(0, slash);
                 port = Integer.parseInt(portStr);
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("invalid port in ss url: " + decoded.substring(colon + 1));

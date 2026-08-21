@@ -11,6 +11,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -35,6 +37,16 @@ public final class Parser {
      * variants are accepted.
      */
     public static Set<ServerConfig> parse(String input) {
+        return parse(input, null);
+    }
+
+    /**
+     * Same as {@link #parse(String)}, but appends one block per line that failed to
+     * parse into a {@link ServerConfig} to {@code failedLinesOut} (if non-null).
+     * Each block consists of three entries: the error message, the original input
+     * line, and an empty separator line.
+     */
+    public static Set<ServerConfig> parse(String input, List<String> failedLinesOut) {
         String collapsed = input.replaceAll("\\s+", "");
         String text;
         if (collapsed.contains("://"))
@@ -56,11 +68,22 @@ public final class Parser {
                 ServerConfig cfg = parseLine(trimmed);
                 if (cfg != null)
                     result.add(cfg);
+                else
+                    recordFailure(failedLinesOut, trimmed, "unknown protocol");
             } catch (RuntimeException e) {
                 System.err.println("Warning: Skipping malformed line: " + e.getMessage());
+                recordFailure(failedLinesOut, trimmed, e.getMessage());
             }
         }
         return result;
+    }
+
+    private static void recordFailure(List<String> failedLinesOut, String line, String reason) {
+        if (failedLinesOut != null) {
+            failedLinesOut.add(reason);
+            failedLinesOut.add(line);
+            failedLinesOut.add("");
+        }
     }
 
     private static ServerConfig parseLine(String line) {
@@ -76,7 +99,21 @@ public final class Parser {
     }
 
     private static ServerConfig parseVmess(String payload, String rawUrl) {
-        String json = payload.startsWith("{") ? payload : base64Decode(payload);
+        String json;
+        if (payload.startsWith("{")) {
+            json = payload;
+        } else if (payload.contains("@")) {
+            // URI-style vmess link ("vmess://id@host:port?..."); '@' never occurs in
+            // base64, so this is unambiguous - reuse the generic URI parser.
+            return parseUriBased("vmess", payload, rawUrl);
+        } else {
+            // Some providers append a URI fragment/query after the base64 payload
+            // (e.g. "vmess://<base64>#Remark"); neither '#' nor '?' occurs in base64.
+            int hashIdx = payload.indexOf('#');
+            int qIdx = payload.indexOf('?');
+            int cutIdx = hashIdx >= 0 && (qIdx < 0 || hashIdx < qIdx) ? hashIdx : qIdx;
+            json = base64Decode(cutIdx >= 0 ? payload.substring(0, cutIdx) : payload);
+        }
         JsonObject obj = parseVmessJsonResilient(json);
 
         ServerConfig.Builder b = ServerConfig.builder()

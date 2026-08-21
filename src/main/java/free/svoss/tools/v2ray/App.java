@@ -150,7 +150,7 @@ public class App {
         System.out.println(serverConfigs.size() + " old server configs loaded");
 
         // 2. fetch new server configs (unless --no-fetching)
-        if (!noFetching) fetchServerConfigs(SubscriptionManager.loadSubscriptions());
+        if (!noFetching) fetchServerConfigs(SubscriptionManager.loadSubscriptions(), outDir);
 
         // 3. dedupe server configs (the set takes care of that) and save
         saveServerConfigs();
@@ -548,7 +548,7 @@ public class App {
         }
     }
 
-    private static void importFromUrl(String url) {
+    private static void importFromUrl(String url, List<String> failedLines) {
         String content;
         try {
             content = fetchWebContent(url);
@@ -559,7 +559,7 @@ public class App {
         if (content == null) System.err.println("Failed to fetch server configs from " + url);
         else if (content.isEmpty()) System.err.println("Subscription returned empty content from " + url);
         else {
-            Set<ServerConfig> configs = Parser.parse(content);
+            Set<ServerConfig> configs = Parser.parse(content, failedLines);
             System.out.println("Got " + configs.size() + " server configs from " + url);
             int sizeBefore = serverConfigs.size();
             serverConfigs.addAll(configs);
@@ -608,17 +608,35 @@ public class App {
         }, "fetch " + url, 3);
     }
 
-    private static void fetchServerConfigs(Set<String> subscriptions) throws IOException {
+    private static void fetchServerConfigs(Set<String> subscriptions, File outDir) throws IOException {
         System.out.println("Got " + subscriptions.size() + " subscription sources to check");
+        List<String> failedLines = new ArrayList<>();
         for (String url : subscriptions) {
-            importFromUrl(url);
+            importFromUrl(url, failedLines);
             saveServerConfigs();
         }
 
         // hardcoded check of https://freev2ray.cc/
         Set<String> freeV2RayUrls = FreeV2RayCcScraper.getFreev2rayCcUrls();
-        for (String u : freeV2RayUrls) importFromUrl(u);
+        for (String u : freeV2RayUrls) importFromUrl(u, failedLines);
         saveServerConfigs();
+
+        writeParsingFailures(failedLines, outDir);
+    }
+
+    /** Write all lines that failed to parse into a server config to parsingFailed.log in the output (jar) folder. */
+    private static void writeParsingFailures(List<String> failedLines, File outDir) {
+        if (failedLines.isEmpty())
+            return;
+        File logFile = new File(outDir, "parsingFailed.log");
+        try {
+            String content = String.join(System.lineSeparator(), failedLines) + System.lineSeparator();
+            Util.atomicWrite(logFile, content.getBytes(StandardCharsets.UTF_8));
+            int count = failedLines.size() / 3; // each failure contributes 3 entries: message, line, blank
+            System.out.println(count + " unparseable line(s) written to " + logFile.getAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("Error: Could not write " + logFile.getAbsolutePath() + ": " + e.getMessage());
+        }
     }
 
     private static void saveServerConfigs() throws IOException {

@@ -3,7 +3,9 @@ package free.svoss.tools.v2ray;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,6 +75,54 @@ class ParserTest {
         String url = "vmess://" + base64Encode(json);
         ServerConfig cfg = Parser.parse(url).iterator().next();
         assertEquals(2, cfg.getAlterId());
+    }
+
+    @Test
+    void parseVmessBase64WithFragment() {
+        String json = "{\"v\":\"2\",\"add\":\"1.2.3.4\",\"port\":\"443\","
+                + "\"id\":\"" + VALID_UUID + "\",\"aid\":\"0\",\"net\":\"tcp\"}";
+        String url = "vmess://" + base64Encode(json) + "#My%20Server";
+        Set<ServerConfig> configs = Parser.parse(url);
+        assertEquals(1, configs.size());
+        ServerConfig cfg = configs.iterator().next();
+        assertEquals("vmess", cfg.getProtocol());
+        assertEquals("1.2.3.4", cfg.getAddress());
+        assertEquals(443, cfg.getPort());
+    }
+
+    @Test
+    void parseVmessBase64WithQuery() {
+        String json = "{\"v\":\"2\",\"add\":\"1.2.3.4\",\"port\":\"443\","
+                + "\"id\":\"" + VALID_UUID + "\",\"aid\":\"0\",\"net\":\"tcp\"}";
+        String url = "vmess://" + base64Encode(json) + "?x=1";
+        ServerConfig cfg = Parser.parse(url).iterator().next();
+        assertEquals("1.2.3.4", cfg.getAddress());
+        assertEquals(443, cfg.getPort());
+    }
+
+    @Test
+    void parseVmessUriStyle() {
+        String url = "vmess://" + VALID_UUID + "@example.com:2054?security=tls&type=ws"
+                + "&sni=example.com#Vmess%20URI";
+        Set<ServerConfig> configs = Parser.parse(url);
+        assertEquals(1, configs.size());
+        ServerConfig cfg = configs.iterator().next();
+        assertEquals("vmess", cfg.getProtocol());
+        assertEquals(VALID_UUID, cfg.getId());
+        assertEquals("example.com", cfg.getAddress());
+        assertEquals(2054, cfg.getPort());
+        assertEquals("tls", cfg.getSecurity());
+        assertEquals("ws", cfg.getTransport());
+        assertEquals("example.com", cfg.getSni());
+    }
+
+    @Test
+    void parseVmessJsonWithHashInRemark() {
+        String json = "{\"v\":\"2\",\"add\":\"1.2.3.4\",\"port\":\"443\","
+                + "\"id\":\"" + VALID_UUID + "\",\"aid\":\"0\",\"ps\":\"Node #1\"}";
+        String url = "vmess://" + base64Encode(json);
+        ServerConfig cfg = Parser.parse(url).iterator().next();
+        assertEquals("Node #1", cfg.getRemark());
     }
 
     // --- vless ---
@@ -229,6 +279,32 @@ class ParserTest {
         String input = "vless://no-at-sign\nvless://" + VALID_UUID + "@1.2.3.4:443";
         Set<ServerConfig> configs = Parser.parse(input);
         assertEquals(1, configs.size());
+    }
+
+    @Test
+    void parseCollectsFailedLines() {
+        String badPort = "vless://" + VALID_UUID + "@1.2.3.4:notaport";
+        String unknown = "hysteria2://pw@2.2.2.2:443";
+        String input = "trojan://pw@1.2.3.4:443\n" + badPort + "\n" + unknown;
+        List<String> failures = new ArrayList<>();
+        Set<ServerConfig> configs = Parser.parse(input, failures);
+        assertEquals(1, configs.size());
+        // each failure contributes 3 entries: error message, original line, blank separator
+        assertEquals(6, failures.size());
+        assertFalse(failures.get(0).isEmpty());
+        assertEquals(badPort, failures.get(1));
+        assertEquals("", failures.get(2));
+        assertFalse(failures.get(3).isEmpty());
+        assertTrue(failures.get(3).contains("unknown protocol"));
+        assertEquals(unknown, failures.get(4));
+        assertEquals("", failures.get(5));
+    }
+
+    @Test
+    void parseWithoutCollectorRecordsNothing() {
+        String input = "vless://" + VALID_UUID + "@1.2.3.4:notaport";
+        Set<ServerConfig> configs = Parser.parse(input, null);
+        assertTrue(configs.isEmpty());
     }
 
     @Test

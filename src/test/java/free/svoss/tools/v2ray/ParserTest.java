@@ -308,6 +308,19 @@ class ParserTest {
     }
 
     @Test
+    void parseDetailedCountsLinesAndFailures() {
+        String good1 = "trojan://pw@1.2.3.4:443";
+        String good2 = "trojan://pw@2.2.2.2:443";
+        String bad = "vless://" + VALID_UUID + "@1.2.3.4:notaport";
+        String input = good1 + "\n" + bad + "\n" + good2 + "\n\n"; // trailing blank line ignored
+        Parser.ParseResult result = Parser.parseDetailed(input, new ArrayList<>());
+        assertEquals(2, result.getConfigs().size());
+        assertEquals(3, result.getTotalLines());
+        assertEquals(2, result.getParsedLines());
+        assertEquals(1, result.getFailedLines());
+    }
+
+    @Test
     void unknownProtocolReturnsEmpty() {
         String input = "wireguard://something";
         assertTrue(Parser.parse(input).isEmpty());

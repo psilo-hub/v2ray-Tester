@@ -26,6 +26,31 @@ import static free.svoss.tools.v2ray.Util.isEmpty;
  */
 public final class Parser {
 
+    /** Outcome of parsing one subscription source. */
+    public static final class ParseResult {
+        private final Set<ServerConfig> configs;
+        private final int totalLines;
+        private final int failedLines;
+
+        ParseResult(Set<ServerConfig> configs, int totalLines, int failedLines) {
+            this.configs = configs;
+            this.totalLines = totalLines;
+            this.failedLines = failedLines;
+        }
+
+        /** Successfully parsed configs (deduplicated). */
+        public Set<ServerConfig> getConfigs() { return configs; }
+
+        /** Total number of non-blank server lines found. */
+        public int getTotalLines() { return totalLines; }
+
+        /** Number of lines that parsed properly (before deduplication). */
+        public int getParsedLines() { return totalLines - failedLines; }
+
+        /** Number of lines that failed to parse into a server config. */
+        public int getFailedLines() { return failedLines; }
+    }
+
     private Parser() {
     }
 
@@ -47,6 +72,11 @@ public final class Parser {
      * line, and an empty separator line.
      */
     public static Set<ServerConfig> parse(String input, List<String> failedLinesOut) {
+        return parseDetailed(input, failedLinesOut).getConfigs();
+    }
+
+    /** Same as {@link #parse(String, List)}, but also reports per-line counts. */
+    public static ParseResult parseDetailed(String input, List<String> failedLinesOut) {
         String collapsed = input.replaceAll("\\s+", "");
         String text;
         if (collapsed.contains("://"))
@@ -55,27 +85,36 @@ public final class Parser {
                 text = base64Decode(collapsed);
             } catch (IllegalArgumentException e) {
                 System.err.println("Failed to decode base64 subscription content: " + e.getMessage());
-                return new LinkedHashSet<>();
+                return new ParseResult(new LinkedHashSet<>(), 0, 0);
             }
         }
 
         Set<ServerConfig> result = new LinkedHashSet<>();
+        int totalLines = 0;
+        int failedLines = 0;
         for (String line : text.split("\\r?\\n")) {
             String trimmed = line.trim();
             if (trimmed.isEmpty())
                 continue;
+            totalLines++;
             try {
                 ServerConfig cfg = parseLine(trimmed);
                 if (cfg != null)
                     result.add(cfg);
-                else
+                else {
+                    failedLines++;
                     recordFailure(failedLinesOut, trimmed, "unknown protocol");
+                }
             } catch (RuntimeException e) {
-                System.err.println("Warning: Skipping malformed line: " + e.getMessage());
+                failedLines++;
+                // Failures are recorded via failedLinesOut (written to parsingFailed.log by the caller);
+                // only print to the console when no collector was provided.
+                if (failedLinesOut == null)
+                    System.err.println("Warning: Skipping malformed line: " + e.getMessage());
                 recordFailure(failedLinesOut, trimmed, e.getMessage());
             }
         }
-        return result;
+        return new ParseResult(result, totalLines, failedLines);
     }
 
     private static void recordFailure(List<String> failedLinesOut, String line, String reason) {

@@ -559,13 +559,16 @@ public class App {
         if (content == null) System.err.println("Failed to fetch server configs from " + url);
         else if (content.isEmpty()) System.err.println("Subscription returned empty content from " + url);
         else {
-            Set<ServerConfig> configs = Parser.parse(content, failedLines);
-            System.out.println("Got " + configs.size() + " server configs from " + url);
+            Parser.ParseResult parseResult = Parser.parseDetailed(content, failedLines);
+            Set<ServerConfig> configs = parseResult.getConfigs();
+            System.out.println(url + "\n" + parseResult.getTotalLines() + " server configs: "
+                    + parseResult.getParsedLines() + " parsed properly, "
+                    + parseResult.getFailedLines() + " failed to parse");
             int sizeBefore = serverConfigs.size();
             serverConfigs.addAll(configs);
             int increase = serverConfigs.size() - sizeBefore;
             int dupes = configs.size() - increase;
-            System.out.println(increase + " imported ... " + dupes + " dupes ... total now: " + serverConfigs.size());
+            System.out.println(increase + " imported ... " + dupes + " dupes ... total now: " + serverConfigs.size()+"\n");
         }
     }
 

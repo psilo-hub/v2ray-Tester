@@ -441,6 +441,11 @@ public class App {
 
     private static String formatDuration(long ms) {
         long totalSeconds = ms / 1000;
+        long hours = totalSeconds / 3600;
+        if (hours > 0) {
+            long minutes = (totalSeconds % 3600) / 60;
+            return hours + "h " + String.format(Locale.ROOT, "%02d", minutes) + "m";
+        }
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
         if (minutes > 0) return minutes + "m " + String.format(Locale.ROOT, "%02d", seconds) + "s";

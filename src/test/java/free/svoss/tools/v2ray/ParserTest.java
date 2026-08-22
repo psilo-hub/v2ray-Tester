@@ -284,7 +284,7 @@ class ParserTest {
     @Test
     void parseCollectsFailedLines() {
         String badPort = "vless://" + VALID_UUID + "@1.2.3.4:notaport";
-        String unknown = "hysteria2://pw@2.2.2.2:443";
+        String unknown = "tuic://pw@2.2.2.2:443";
         String input = "trojan://pw@1.2.3.4:443\n" + badPort + "\n" + unknown;
         List<String> failures = new ArrayList<>();
         Set<ServerConfig> configs = Parser.parse(input, failures);

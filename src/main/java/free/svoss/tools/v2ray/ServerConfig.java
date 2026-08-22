@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Immutable representation of a v2ray server configuration (vmess, vless, trojan, or shadowsocks).
+ * Immutable representation of a v2ray server configuration (vmess, vless, trojan, shadowsocks, or hysteria2).
  * Constructed via {@link Builder}.
  */
 public final class ServerConfig implements Comparable<ServerConfig> {
@@ -167,8 +167,9 @@ public final class ServerConfig implements Comparable<ServerConfig> {
             if (port < 1 || port > 65535)
                 throw new IllegalStateException("ServerConfig port must be between 1 and 65535, got: " + port);
             if (protocol == null || (!protocol.equals("vmess") && !protocol.equals("vless")
-                    && !protocol.equals("trojan") && !protocol.equals("ss"))) {
-                throw new IllegalStateException("ServerConfig protocol must be one of vmess, vless, trojan, ss; got: " + protocol);
+                    && !protocol.equals("trojan") && !protocol.equals("ss")
+                    && !protocol.equals("hysteria2"))) {
+                throw new IllegalStateException("ServerConfig protocol must be one of vmess, vless, trojan, ss, hysteria2; got: " + protocol);
             }
             if (id == null || id.trim().isEmpty())
                 throw new IllegalStateException("ServerConfig id must not be null or blank");

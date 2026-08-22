@@ -21,7 +21,7 @@ import java.util.Set;
 import static free.svoss.tools.v2ray.Util.isEmpty;
 
 /**
- * Parses v2ray subscription content (vmess, vless, trojan, shadowsocks URLs) into {@link ServerConfig} instances.
+ * Parses v2ray subscription content (vmess, vless, trojan, shadowsocks, hysteria2 URLs) into {@link ServerConfig} instances.
  * Handles both plain-text and base64-encoded subscription formats.
  */
 public final class Parser {
@@ -134,6 +134,10 @@ public final class Parser {
             return parseUriBased("trojan", line.substring("trojan://".length()), line);
         if (line.startsWith("ss://"))
             return parseSs(line.substring("ss://".length()), line);
+        if (line.startsWith("hysteria2://"))
+            return parseHysteria2(line.substring("hysteria2://".length()), line);
+        if (line.startsWith("hy2://"))
+            return parseHysteria2(line.substring("hy2://".length()), line);
         return null;
     }
 
@@ -334,6 +338,78 @@ public final class Parser {
             }
         }
         return b.build();
+    }
+
+    /**
+     * Parses a hysteria2 share link ({@code hysteria2://auth@host[:port][?params]#remark}).
+     * The {@code hy2://} alias scheme is dispatched here as well.
+     */
+    private static ServerConfig parseHysteria2(String rest, String rawUrl) {
+        int hashIdx = rest.indexOf('#');
+        String main = hashIdx >= 0 ? rest.substring(0, hashIdx) : rest;
+        String remark = hashIdx >= 0 ? urlDecode(rest.substring(hashIdx + 1)) : null;
+
+        int atIdx = main.indexOf('@');
+        if (atIdx < 0)
+            throw new IllegalArgumentException("missing '@' in hysteria2 url");
+        String auth = urlDecode(main.substring(0, atIdx));
+        String hostPortQuery = main.substring(atIdx + 1);
+
+        int qIdx = hostPortQuery.indexOf('?');
+        String hostPort = qIdx >= 0 ? hostPortQuery.substring(0, qIdx) : hostPortQuery;
+        // Strip any path portion (e.g. "host:443/") - only the authority remains
+        int slashIdx = hostPort.indexOf('/');
+        if (slashIdx >= 0)
+            hostPort = hostPort.substring(0, slashIdx);
+        String query = qIdx >= 0 ? hostPortQuery.substring(qIdx + 1) : null;
+
+        // Port hopping form (e.g. "host:443,5000-6000"): keep only the first port for
+        // the port field and preserve the full authority string under extra("ports").
+        String portsExtra = null;
+        int portStart = portListStart(hostPort);
+        if (portStart >= 0) {
+            String portPart = hostPort.substring(portStart);
+            if (portPart.indexOf(',') >= 0 || portPart.indexOf('-') >= 0) {
+                portsExtra = hostPort;
+                String firstPort = portPart.split("[,-]", 2)[0];
+                hostPort = hostPort.substring(0, portStart) + firstPort;
+            }
+        }
+
+        HostPort hp = parseHostPort(hostPort);
+        Map<String, String> params = parseQuery(query);
+
+        ServerConfig.Builder b = ServerConfig.builder()
+                .protocol("hysteria2")
+                .address(hp.host)
+                .port(hp.port)
+                .id(auth)
+                .remark(remark)
+                .rawUrl(rawUrl);
+        if (portsExtra != null)
+            b.extra("ports", portsExtra);
+
+        // hysteria2 has no security/transport parameters; sni maps onto the dedicated
+        // field, every other parameter (insecure, obfs, obfs-password, pinSHA256, ...)
+        // is kept verbatim in extra.
+        for (Map.Entry<String, String> e : params.entrySet()) {
+            switch (e.getKey()) {
+                case "sni": b.sni(e.getValue()); break;
+                default: b.extra(e.getKey(), e.getValue());
+            }
+        }
+        return b.build();
+    }
+
+    /** Index where the explicit port starts in an authority string, or -1 if absent. */
+    private static int portListStart(String hostPort) {
+        if (hostPort.startsWith("[")) {
+            int end = hostPort.indexOf(']');
+            return end >= 0 && hostPort.length() > end + 1 && hostPort.charAt(end + 1) == ':'
+                    ? end + 2 : -1;
+        }
+        int colon = hostPort.lastIndexOf(':');
+        return colon < 0 ? -1 : colon + 1;
     }
 
     private static ServerConfig parseSs(String rest, String rawUrl) {

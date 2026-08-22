@@ -109,7 +109,7 @@ class ServerConfigBuilderValidationTest {
 
     @Test
     void validProtocolsAccepted() {
-        for (String proto : new String[]{"vmess", "vless", "trojan", "ss"}) {
+        for (String proto : new String[]{"vmess", "vless", "trojan", "ss", "hysteria2"}) {
             String id = (proto.equals("vmess") || proto.equals("vless"))
                     ? "550e8400-e29b-41d4-a716-446655440000"
                     : "password";

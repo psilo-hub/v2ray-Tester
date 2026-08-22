@@ -6,7 +6,7 @@ A Java command-line tool that automatically fetches, parses, and benchmarks V2Ra
 
 ## Features
 
-- **Multi-protocol support** — vmess, vless, trojan, and shadowsocks (`ss://`) server URLs
+- **Multi-protocol support** — vmess, vless, trojan, shadowsocks (`ss://`), and hysteria2 (`hysteria2://`, `hy2://`) server URLs
 - **Multi-source fetching** — subscription URLs and [freev2ray.cc](https://freev2ray.cc/) scraper
 - **Automated Xray core management** — downloads and extracts the correct Xray binary for your platform from GitHub releases (or uses a locally installed one via `V2RAY_CORE` env / `v2ray.core` property)
 - **Concurrent ping & download testing** — two-phase pipeline: TCP connect ping first, then real download speed through the Xray SOCKS5 proxy

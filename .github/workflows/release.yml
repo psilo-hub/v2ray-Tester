@@ -25,6 +25,8 @@ jobs:
           mkdir -p release
           cp target/v2ray-tester-1.0.0.jar release/
           cp scripts/start.bat scripts/start.sh release/
+          cp docs/subscription_list.txt release/
+          cp scripts/addOrRemoveSubscriptionUrls.bat scripts/addOrRemoveSubscriptionUrls.sh release/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

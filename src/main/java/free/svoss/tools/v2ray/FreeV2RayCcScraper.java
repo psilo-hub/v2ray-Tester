@@ -43,9 +43,14 @@ class FreeV2RayCcScraper {
     static Set<String> filterFreeV2rayUrlsByDate(Set<String> urls) {
         urls.remove(null);
         if (urls.isEmpty()) return urls;
-        String dateString = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-M-d"));
-        Set<String> urlsMatchingToday = urls.stream().filter(url -> url.contains(dateString)).collect(Collectors.toSet());
-        return urlsMatchingToday.isEmpty() ? urls : urlsMatchingToday;
+        LocalDate now = LocalDate.now();
+        LocalDate yesterday = now.minusDays(1);
+        String dateStringNow = now.format(DateTimeFormatter.ofPattern("yyyy-M-d"));
+        String dateStringYesterday = yesterday.format(DateTimeFormatter.ofPattern("yyyy-M-d"));
+        Set<String> urlsMatchingDay = urls.stream().filter(url -> url.contains(dateStringNow)).collect(Collectors.toSet());
+        if (urlsMatchingDay.isEmpty())
+            urlsMatchingDay = urls.stream().filter(url -> url.contains(dateStringYesterday)).collect(Collectors.toSet());
+        return urlsMatchingDay.isEmpty() ? urls : urlsMatchingDay;
     }
 
     static Set<String> getFreev2rayCcUrlsFromDayPage(String url) {
@@ -67,8 +72,7 @@ class FreeV2RayCcScraper {
             if (text.startsWith("https://node.freev2ray.cc/uploads/") && text.endsWith(".txt"))
                 collectedSourceUrls.add(text);
         }
-        if (collectedSourceUrls.isEmpty())
-            System.err.println("No urls collected from " + url);
+        if (collectedSourceUrls.isEmpty()) System.err.println("No urls collected from " + url);
         return collectedSourceUrls;
     }
 

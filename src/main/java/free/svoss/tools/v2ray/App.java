@@ -5,14 +5,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import org.fusesource.jansi.AnsiConsole;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-
-import static free.svoss.tools.v2ray.Util.isEmpty;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +22,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static free.svoss.tools.v2ray.Util.isEmpty;
 
 public class App {
     // --- Exit codes ---
@@ -78,6 +80,8 @@ public class App {
 
     private static void mainInternal(String[] args) throws IOException {
 
+        printWelcomeMessage();
+
         File outDir = JarFolderTool.getRunningFromFolder();
         if (outDir == null) {
             System.err.println("Error: Could not determine output directory. The application must be run from a folder.");
@@ -94,8 +98,6 @@ public class App {
             System.exit(1);
             return;
         }
-        System.out.println("Output folder: " + outDir.getAbsolutePath());
-
         SubscriptionManager.ensureDefaultSubscriptions();
 
         if (hasFlag(args, "--help")) {
@@ -161,8 +163,47 @@ public class App {
         }
 
         // 4. test and remove unreachable and slow servers; writes all.txt/best.txt/best.png to the jar folder
+        System.out.println("Output folder: " + outDir.getAbsolutePath());
         boolean serversPassed = testServers(outDir);
         System.exit(serversPassed ? EXIT_SUCCESS : EXIT_PARTIAL);
+    }
+
+    private static void printWelcomeMessage() {
+        initAnsi();
+
+        String welcomeMessage;
+
+        if (hasUnicodeSupport)
+            welcomeMessage = Ansi.CLS + "\uD83D\uDC7E Welcome to Stefan's " + Ansi.BOLD + "v2ray" + Ansi.RESET + " tester \uD83D\uDE80";
+        else welcomeMessage = "Welcome to Stefan's v2ray tester";
+
+        System.out.println(welcomeMessage + "\n");
+    }
+
+    private static boolean hasUnicodeSupport = false;
+
+    private static void initAnsi() {
+        AnsiConsole.systemInstall();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ignored) {
+
+            }
+            AnsiConsole.systemUninstall();
+        }));
+
+        // First check if it's necessary (Windows and not in IntelliJ ... assuming other OSs support unicode)
+        if (WindowsConsoleSetUnicodeOutput.isWindows() && !runningFromIntelliJ()) {
+            WindowsConsoleSetUnicodeOutput.EnableResult result = WindowsConsoleSetUnicodeOutput.enable();
+            hasUnicodeSupport = (result instanceof WindowsConsoleSetUnicodeOutput.EnableResult.Success || result instanceof WindowsConsoleSetUnicodeOutput.EnableResult.AlreadyEnabled);
+        } else hasUnicodeSupport = true;
+    }
+
+    public static boolean runningFromIntelliJ() {
+        List<String> args = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        if (args != null) for (String a : args) if (a != null && a.contains("idea_rt.jar")) return true;
+        return false;
     }
 
     /** Rebuild serverConfigs from JSON to deduplicate. */
@@ -177,9 +218,7 @@ public class App {
     }
 
     /** Submit ping tasks; passing results go into the passedPings queue. */
-    private static void submitPingPhase(ExecutorService pool, List<ServerConfig> servers,
-            BlockingQueue<ServerConfigWithTestResult> passedPings, AtomicInteger pingDone,
-            AtomicInteger passedPingCount, CountDownLatch pingDoneLatch, Set<ServerConfig> pingFailed) {
+    private static void submitPingPhase(ExecutorService pool, List<ServerConfig> servers, BlockingQueue<ServerConfigWithTestResult> passedPings, AtomicInteger pingDone, AtomicInteger passedPingCount, CountDownLatch pingDoneLatch, Set<ServerConfig> pingFailed) {
         for (ServerConfig serverConfig : servers) {
             pool.submit(() -> {
                 try {
@@ -198,11 +237,7 @@ public class App {
     }
 
     /** Start download workers that poll from the passedPings queue. */
-    private static void startDownloadWorkers(ExecutorService dlPool, int workers,
-            BlockingQueue<ServerConfigWithTestResult> passedPings, AtomicBoolean pingPhaseDone,
-            Collection<ServerConfigWithTestResult> resultsDownloadWorks, Set<ServerConfig> dlFailed,
-            AtomicInteger dlDone, AtomicReference<ServerConfigWithTestResult> currentBest,
-            CountDownLatch dlWorkersLatch) {
+    private static void startDownloadWorkers(ExecutorService dlPool, int workers, BlockingQueue<ServerConfigWithTestResult> passedPings, AtomicBoolean pingPhaseDone, Collection<ServerConfigWithTestResult> resultsDownloadWorks, Set<ServerConfig> dlFailed, AtomicInteger dlDone, AtomicReference<ServerConfigWithTestResult> currentBest, CountDownLatch dlWorkersLatch) {
         for (int i = 0; i < workers; i++) {
             dlPool.submit(() -> {
                 try {
@@ -229,8 +264,7 @@ public class App {
     }
 
     /** Create a shutdown hook that gracefully stops pools and writes partial results on Ctrl+C. */
-    private static Thread createShutdownHook(ExecutorService pool, ExecutorService dlPool,
-            Collection<ServerConfigWithTestResult> sharedResults, AtomicBoolean resultsWritten, File outDir) {
+    private static Thread createShutdownHook(ExecutorService pool, ExecutorService dlPool, Collection<ServerConfigWithTestResult> sharedResults, AtomicBoolean resultsWritten, File outDir) {
         return new Thread(() -> {
             if (!resultsWritten.compareAndSet(false, true)) return;
             System.out.println("\nShutting down... writing partial results.");
@@ -260,8 +294,7 @@ public class App {
     }
 
     /** Remove failed servers, save configs, and write best results. */
-    private static void cleanupResults(Set<ServerConfig> pingFailed, Set<ServerConfig> dlFailed,
-            Collection<ServerConfigWithTestResult> resultsDownloadWorks, AtomicBoolean resultsWritten, File outDir) throws IOException {
+    private static void cleanupResults(Set<ServerConfig> pingFailed, Set<ServerConfig> dlFailed, Collection<ServerConfigWithTestResult> resultsDownloadWorks, AtomicBoolean resultsWritten, File outDir) throws IOException {
         serverConfigs.removeAll(pingFailed);
         serverConfigs.removeAll(dlFailed);
         System.out.println(serverConfigs.size() + " servers left");
@@ -487,7 +520,6 @@ public class App {
     }
 
 
-
     private static <T> Set<T> topN(Collection<T> items, int n, java.util.function.Predicate<T> filter, Comparator<T> comparator) {
         Set<T> top = new LinkedHashSet<>();
         if (items == null || n <= 0) return top;
@@ -561,24 +593,19 @@ public class App {
         else {
             Parser.ParseResult parseResult = Parser.parseDetailed(content, failedLines);
             Set<ServerConfig> configs = parseResult.getConfigs();
-            System.out.println(url + "\n" + parseResult.getTotalLines() + " server configs: "
-                    + parseResult.getParsedLines() + " parsed properly, "
-                    + parseResult.getFailedLines() + " failed to parse");
+            System.out.println(url + "\n" + parseResult.getTotalLines() + " server configs: " + parseResult.getParsedLines() + " parsed properly, " + parseResult.getFailedLines() + " failed to parse");
             int sizeBefore = serverConfigs.size();
             serverConfigs.addAll(configs);
             int increase = serverConfigs.size() - sizeBefore;
             int dupes = configs.size() - increase;
-            System.out.println(increase + " imported ... " + dupes + " dupes ... total now: " + serverConfigs.size()+"\n");
+            System.out.println(increase + " imported ... " + dupes + " dupes ... total now: " + serverConfigs.size() + "\n");
         }
     }
 
     static boolean isPrivateHost(String host) {
         try {
             java.net.InetAddress addr = java.net.InetAddress.getByName(host);
-            return addr.isLoopbackAddress() || addr.isAnyLocalAddress()
-                    || addr.isSiteLocalAddress() || addr.isLinkLocalAddress()
-                    || addr.isMulticastAddress()
-                    || addr.getHostAddress().startsWith("169.254.");
+            return addr.isLoopbackAddress() || addr.isAnyLocalAddress() || addr.isSiteLocalAddress() || addr.isLinkLocalAddress() || addr.isMulticastAddress() || addr.getHostAddress().startsWith("169.254.");
         } catch (java.net.UnknownHostException e) {
             return false;
         }
@@ -629,8 +656,7 @@ public class App {
 
     /** Write all lines that failed to parse into a server config to parsingFailed.log in the output (jar) folder. */
     private static void writeParsingFailures(List<String> failedLines, File outDir) {
-        if (failedLines.isEmpty())
-            return;
+        if (failedLines.isEmpty()) return;
         File logFile = new File(outDir, "parsingFailed.log");
         try {
             String content = String.join(System.lineSeparator(), failedLines) + System.lineSeparator();
@@ -656,9 +682,7 @@ public class App {
                     HashSet<ServerConfig> loaded = new Gson().fromJson(content, new TypeToken<HashSet<ServerConfig>>() {
                     }.getType());
                     if (loaded != null) {
-                        loaded.removeIf(sc -> sc == null || sc.getAddress() == null
-                                || sc.getPort() < 1 || sc.getPort() > 65535
-                                || sc.getProtocol() == null);
+                        loaded.removeIf(sc -> sc == null || sc.getAddress() == null || sc.getPort() < 1 || sc.getPort() > 65535 || sc.getProtocol() == null);
                         return loaded;
                     }
                 }

@@ -149,7 +149,7 @@ public class App {
 
         // 1. load stored server configs
         serverConfigs.addAll(loadServerConfigs());
-        System.out.println(serverConfigs.size() + " old server configs loaded");
+        System.out.println(serverConfigs.size() + " old server configs loaded\n");
 
         // 2. fetch new server configs (unless --no-fetching)
         if (!noFetching) fetchServerConfigs(SubscriptionManager.loadSubscriptions(), outDir);
@@ -177,7 +177,7 @@ public class App {
             welcomeMessage = Ansi.CLS + "\uD83D\uDC7E Welcome to Stefan's " + Ansi.BOLD + "v2ray" + Ansi.RESET + " tester \uD83D\uDE80";
         else welcomeMessage = "Welcome to Stefan's v2ray tester";
 
-        System.out.println(welcomeMessage + "\n");
+        System.out.println(welcomeMessage + "\n\n");
     }
 
     private static boolean hasUnicodeSupport = false;
@@ -639,7 +639,6 @@ public class App {
     }
 
     private static void fetchServerConfigs(Set<String> subscriptions, File outDir) throws IOException {
-        System.out.println("Got " + subscriptions.size() + " subscription sources to check");
         List<String> failedLines = new ArrayList<>();
         for (String url : subscriptions) {
             importFromUrl(url, failedLines);
@@ -671,7 +670,6 @@ public class App {
     private static void saveServerConfigs() throws IOException {
         String json = GSON.toJson(serverConfigs);
         Util.atomicWrite(serverListFile, json.getBytes(StandardCharsets.UTF_8));
-        System.out.println(serverConfigs.size() + " server configs saved");
     }
 
     private static HashSet<ServerConfig> loadServerConfigs() {

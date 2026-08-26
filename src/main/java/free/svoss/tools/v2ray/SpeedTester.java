@@ -26,10 +26,10 @@ import java.util.stream.Stream;
 public final class SpeedTester {
 
     private static final String[] SPEED_TEST_URLS = {
-            "https://speed.cloudflare.com/__down?bytes=10000000",
-            "http://speedtest.tele2.net/10MB.zip",
-            "http://proof.ovh.net/files/10Mb.dat",
-            "http://cachefly.cachefly.net/10mb.test"
+            "https://speed.cloudflare.com/__down?bytes=1000000",
+            "http://speedtest.tele2.net/1MB.zip",
+            "http://proof.ovh.net/files/1Mb.dat",
+            "http://cachefly.cachefly.net/1mb.test"
     };
 
     private static final int CONNECT_TIMEOUT_MS = 8_000;

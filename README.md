@@ -153,7 +153,7 @@ java -jar v2ray-tester-1.0.0.jar --just-fetch
          │ only reachable servers
          ▼
 ┌─────────────────────────────────┐
-│  Phase 2: Download Speed Test   │  Xray core as SOCKS5 proxy → download 10 MB test file
+│  Phase 2: Download Speed Test   │  Xray core as SOCKS5 proxy → download 1 MB test file
 └────────┬────────────────────────┘
          │
          ▼
@@ -169,7 +169,7 @@ java -jar v2ray-tester-1.0.0.jar --just-fetch
 
 ### Xray Core
 
-The speed test works by running a local [Xray-core](https://github.com/XTLS/Xray-core) process with a generated config that routes traffic through the server under test. The tool then downloads a 10 MB test file through the local SOCKS5 proxy and measures throughput (primary endpoint: Cloudflare speed test, with public mirrors as fallbacks).
+The speed test works by running a local [Xray-core](https://github.com/XTLS/Xray-core) process with a generated config that routes traffic through the server under test. The tool then downloads a 1 MB test file through the local SOCKS5 proxy and measures throughput (primary endpoint: Cloudflare speed test, with public mirrors as fallbacks).
 
 The core binary is resolved in this order:
 1. `V2RAY_CORE` environment variable (path to the executable)

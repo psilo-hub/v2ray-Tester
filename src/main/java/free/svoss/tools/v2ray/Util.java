@@ -1,5 +1,8 @@
 package free.svoss.tools.v2ray;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,5 +41,9 @@ public class Util {
         }
         System.err.println("All " + maxAttempts + " attempts failed for " + description + ": " + (lastException != null ? lastException.getMessage() : "unknown error"));
         return null;
+    }
+
+    static Document getJsoupDoc(String url) {
+        return Util.retryNetwork(() -> Jsoup.connect(url).maxBodySize(75 * 1024 * 1024).timeout(5 * 60 * 1000).get(), "get " + url, 3);
     }
 }

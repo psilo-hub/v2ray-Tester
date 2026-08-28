@@ -15,7 +15,7 @@ class FreeV2RayCcScraper {
 
     static Set<String> getFreev2rayCcUrls() {
         String baseUrl = "https://freev2ray.cc/";
-        Document doc = getJsoupDoc(baseUrl);
+        Document doc = Util.getJsoupDoc(baseUrl);
         if (doc == null) {
             System.err.println("Failed to fetch " + baseUrl);
             return new HashSet<>();
@@ -57,7 +57,7 @@ class FreeV2RayCcScraper {
         System.out.println("Day page : " + url);
         Document doc = null;
         try {
-            doc = getJsoupDoc(url);
+            doc = Util.getJsoupDoc(url);
         } catch (Exception e) {
             System.err.println("Failed to fetch content from " + url + "\n" + e.getMessage() + "\n");
         }
@@ -76,7 +76,4 @@ class FreeV2RayCcScraper {
         return collectedSourceUrls;
     }
 
-    static Document getJsoupDoc(String url) {
-        return Util.retryNetwork(() -> Jsoup.connect(url).maxBodySize(75 * 1024 * 1024).timeout(5 * 60 * 1000).get(), "get " + url, 3);
-    }
 }

@@ -1,5 +1,8 @@
 package free.svoss.tools.v2ray;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,9 +36,29 @@ final class SubscriptionManager {
         Set<String> urls = new LinkedHashSet<>();
         for (String line : Files.readAllLines(subscriptionFile.toPath(), StandardCharsets.UTF_8)) {
             String trimmed = line.trim();
-            if (!trimmed.isEmpty()) urls.add(trimmed);
+            // remove old v2nodes url: something like https://www.v2nodes.com/subscriptions/country/all/?key=001AA22DB6EDBA0
+            if (!trimmed.isEmpty()&&!trimmed.contains("https://www.v2nodes.com/subscriptions/country/all/?key=")) urls.add(trimmed);
         }
+
+        String v2nodesUrl = getFreshV2nodesUrl();
+        if(v2nodesUrl!=null) urls.add(v2nodesUrl);
+
         return urls;
+    }
+
+    private static String getFreshV2nodesUrl() {
+        return getV2nodesUrlFromDoc(Util.getJsoupDoc("https://www.v2nodes.com/"));
+    }
+
+    private static String getV2nodesUrlFromDoc( Document doc) {
+        if(doc==null) return null;
+        Element subscriptionInput = doc.selectFirst("input[id=subscription]");
+        if(subscriptionInput==null) return null;
+        String value = subscriptionInput.attr("value");
+        String dataConfig=subscriptionInput.attr("data-config");
+        if(value.contains("?key="))return value;
+        if(dataConfig.contains("?key="))return dataConfig;
+        return null;
     }
 
     static void saveSubscriptions(Set<String> urls) throws IOException {

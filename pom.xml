@@ -20,7 +20,7 @@
         <zxing.version>3.5.4</zxing.version>
         <junit.version>5.14.4</junit.version>
         <jna.version>5.17.0</jna.version>
-        <jansi.version>2.4.2</jansi.version>
+        <jansi.version>2.4.3</jansi.version>
     </properties>
 
     <dependencyManagement>

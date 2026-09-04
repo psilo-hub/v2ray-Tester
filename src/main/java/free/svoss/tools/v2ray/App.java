@@ -627,7 +627,7 @@ public class App {
             System.err.println("Invalid URL: " + url + " (" + e.getMessage() + ")");
             return null;
         }
-        return Util.retryNetwork(() -> {
+        String webContent= Util.retryNetwork(() -> {
             Connection conn = Jsoup.connect(url);
             conn.ignoreContentType(true);
             conn.maxBodySize(MAX_SUBSCRIPTION_BODY_BYTES);
@@ -636,6 +636,9 @@ public class App {
             byte[] bytes = response.bodyAsBytes();
             return new String(bytes, StandardCharsets.UTF_8);
         }, "fetch " + url, 3);
+
+        if(webContent!=null||!url.contains("raw.githubusercontent.com/"))return webContent;
+        return RawGithubFetcher.getAsString(url);
     }
 
     private static void fetchServerConfigs(Set<String> subscriptions, File outDir) throws IOException {

@@ -21,7 +21,8 @@ public class RawGithubFetcher {
         try {
             data = directDl(url);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("direct download failed: "+url+"\n"+ex.getMessage()+"\n");
+            //ex.printStackTrace();
         }
         if (data != null && data.length > 0) return data;
         //*/
@@ -30,7 +31,8 @@ public class RawGithubFetcher {
         try {
             data = resolveIpDl(url);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("resolve ip -> download failed: "+url+"\n"+ex.getMessage()+"\n");
+            //ex.printStackTrace();
         }
         if (data != null && data.length > 0) return data;
         //*/
@@ -39,7 +41,8 @@ public class RawGithubFetcher {
         try {
             data = mirrorDl(url);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("mirror download failed: "+url+"\n"+ex.getMessage()+"\n");
+            //ex.printStackTrace();
         }
         if (data != null && data.length > 0) return data;
         //*/
@@ -182,7 +185,8 @@ public class RawGithubFetcher {
             return buffer.toByteArray();
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("read from url failed: "+url+"\n"+ex.getMessage()+"\n");
+            //ex.printStackTrace();
             return null;
         }
     }
@@ -190,8 +194,7 @@ public class RawGithubFetcher {
     private static boolean isRawGithubLink(String url) {
         if (url == null || !url.startsWith("https://" + rghucc + "/")) return false;
         url = url.substring(("https://" + rghucc + "/").length());
-        if (url.isEmpty() || url.indexOf("/") == url.lastIndexOf("/")) return false;
-        return true;
+        return !url.isEmpty() && url.indexOf("/") != url.lastIndexOf("/");
     }
 
     public static String getAsString(String url) {

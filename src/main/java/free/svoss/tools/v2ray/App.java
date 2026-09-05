@@ -81,6 +81,7 @@ public class App {
     private static void mainInternal(String[] args) throws IOException {
 
         printWelcomeMessage();
+        UpdateChecker.checkForUpdates();
 
         File outDir = JarFolderTool.getRunningFromFolder();
         if (outDir == null) {

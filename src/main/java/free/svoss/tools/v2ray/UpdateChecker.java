@@ -12,7 +12,7 @@ import java.security.MessageDigest;
 
 final class UpdateChecker {
 
-    private static final String CHANGELOG_URL = "https://raw.githubusercontent.com/psilo-hub/v2ray-Tester/main/CHANGELOG.md";
+    private static final String CHANGELOG_URL = "https://github.com/psilo-hub/v2ray-Tester/raw/refs/heads/main/src/main/resources/CHANGELOG.md";
     private static final String RELEASE_URL = "https://github.com/psilo-hub/v2ray-Tester/releases/latest";
     private static final long ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000L;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();

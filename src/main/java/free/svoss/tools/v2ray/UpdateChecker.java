@@ -2,6 +2,8 @@ package free.svoss.tools.v2ray;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Locale;
 
 final class UpdateChecker {
 
@@ -43,6 +46,11 @@ final class UpdateChecker {
 
             UpdateCheckData data = readUpdateData(updateFile);
 
+            if (isStoredUpdatePending(data)) {
+                printUpdateAvailable();
+                return;
+            }
+
             if (data.lastCheckTime != 0
                     && (System.currentTimeMillis() - data.lastCheckTime) < ONE_WEEK_MS) {
                 return;
@@ -52,6 +60,25 @@ final class UpdateChecker {
         } catch (Exception e) {
             System.err.println("Warning: Update check failed: " + e.getMessage());
         }
+    }
+
+    private static boolean isStoredUpdatePending(UpdateCheckData data) {
+        if (data.changelogHash == null) {
+            return false;
+        }
+        String embeddedChangelog = readEmbeddedChangelog();
+        if (embeddedChangelog == null) {
+            return false;
+        }
+        return !data.changelogHash.equals(sha256(embeddedChangelog));
+    }
+
+    private static void printUpdateAvailable() {
+        System.out.println();
+        System.out.println("*** A new version of v2ray-tester is available! ***");
+        System.out.println("Download the latest release from:");
+        System.out.println("  " + RELEASE_URL);
+        System.out.println();
     }
 
     private static void performUpdateCheck(File updateFile, UpdateCheckData data) {
@@ -64,9 +91,8 @@ final class UpdateChecker {
 
         String embeddedHash = sha256(embeddedChangelog);
 
-        String remoteChangelog = RawGithubFetcher.getAsString(CHANGELOG_URL);
+        String remoteChangelog = getRemoteChangelog();
         if (remoteChangelog == null) {
-            System.err.println("\nFailed to fetch remote CHANGELOG\n");
             // Network failed — do NOT update timestamp so we retry next startup.
             return;
         }
@@ -74,12 +100,8 @@ final class UpdateChecker {
         String remoteHash = sha256(remoteChangelog);
 
         if (!embeddedHash.equals(remoteHash)) {
-            System.out.println();
-            System.out.println("*** A new version of v2ray-tester is available! ***");
-            System.out.println("Download the latest release from:");
-            System.out.println("  " + RELEASE_URL);
-            System.out.println();
-        }else System.out.println("\n✅ We're up-to-date ✅\n");
+            printUpdateAvailable();
+        } else System.out.println("\n✅ We're up-to-date ✅\n");
 
 
         data.lastCheckTime = System.currentTimeMillis();
@@ -90,6 +112,35 @@ final class UpdateChecker {
         } catch (Exception e) {
             System.err.println("Warning: Could not write update check data: " + e.getMessage());
         }
+    }
+
+    private static String getRemoteChangelog() {
+        String webContent=null;
+        String failMsg=null;
+
+        try {
+            webContent = Util.retryNetwork(() -> {
+                Connection conn = Jsoup.connect(CHANGELOG_URL);
+                conn.ignoreContentType(true);
+                conn.maxBodySize(64_000);
+                conn.timeout(30_000);
+                Connection.Response response = conn.execute();
+                byte[] bytes = response.bodyAsBytes();
+                return new String(bytes, StandardCharsets.UTF_8);
+            }, "fetch " + CHANGELOG_URL, 3);
+            if (webContent == null || !webContent.toLowerCase(Locale.ROOT).contains("changelog"))
+                webContent = RawGithubFetcher.getAsString(CHANGELOG_URL);
+        } catch (Exception e) {
+            failMsg=e.getMessage();
+        }
+
+        if (webContent != null && webContent.toLowerCase(Locale.ROOT).contains("changelog"))return webContent;
+
+        if(failMsg==null)
+            System.err.println("❌ Failed to fetch remote CHANGELOG ❌\n");
+        else System.err.println("❌ Failed to fetch remote CHANGELOG: "+failMsg+"\n");
+
+        return null;
     }
 
     private static String sha256(String content) {

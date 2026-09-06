@@ -9,4 +9,4 @@
 - Ping and download speed testing
 - QR code generation for best servers
 - Automatic server config deduplication
-- Update check
+- Update check (fixed?)

@@ -422,7 +422,7 @@ public class App {
                 System.out.println();
                 System.out.println(line);
                 best.getServerConfig().ifPresent(sc -> {
-                    System.out.println(QrHelper.renderQrAscii(sc.getRawUrl()));
+                    System.out.println(Ansi.CLS+"\n"+QrHelper.renderQrAscii(sc.getRawUrl()));
                     System.out.println();
                     QrHelper.saveQrPng(sc.getRawUrl(), new File(outDir, "best.png"));
                 });

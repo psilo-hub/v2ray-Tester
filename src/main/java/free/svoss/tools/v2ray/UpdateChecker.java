@@ -55,8 +55,10 @@ final class UpdateChecker {
     }
 
     private static void performUpdateCheck(File updateFile, UpdateCheckData data) {
+        System.out.println("\nChecking for updates\n");
         String embeddedChangelog = readEmbeddedChangelog();
         if (embeddedChangelog == null) {
+            System.err.println("\nFailed to load embedded CHANGELOG\n");
             return;
         }
 
@@ -64,6 +66,7 @@ final class UpdateChecker {
 
         String remoteChangelog = RawGithubFetcher.getAsString(CHANGELOG_URL);
         if (remoteChangelog == null) {
+            System.err.println("\nFailed to fetch remote CHANGELOG\n");
             // Network failed — do NOT update timestamp so we retry next startup.
             return;
         }
@@ -76,7 +79,8 @@ final class UpdateChecker {
             System.out.println("Download the latest release from:");
             System.out.println("  " + RELEASE_URL);
             System.out.println();
-        }
+        }else System.out.println("\n✅ We're up-to-date ✅\n");
+
 
         data.lastCheckTime = System.currentTimeMillis();
         data.changelogHash = remoteHash;

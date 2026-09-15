@@ -150,12 +150,82 @@ final class XrayCoreManager {
 
     static String assetName() {
         String arch = System.getProperty("os.arch", "").toLowerCase(Locale.ROOT);
-        boolean arm = arch.contains("aarch64") || arch.contains("arm64");
-        if (OS_NAME.contains("win"))
-            return arm ? "Xray-windows-arm64-v8a.zip" : "Xray-windows-64.zip";
-        if (OS_NAME.contains("mac"))
-            return arm ? "Xray-macos-arm64-v8a.zip" : "Xray-macos-64.zip";
-        return arm ? "Xray-linux-arm64-v8a.zip" : "Xray-linux-64.zip";
+        return assetNameFor(OS_NAME, arch);
+    }
+
+    /** Maps the running OS and CPU architecture to the matching Xray-core release asset. */
+    static String assetNameFor(String osName, String arch) {
+        String os = osName.toLowerCase(Locale.ROOT);
+        arch = arch.toLowerCase(Locale.ROOT);
+        if (os.contains("win")) {
+            if (isArm64(arch))
+                return "Xray-windows-arm64-v8a.zip";
+            if (is32BitX86(arch))
+                return "Xray-windows-32.zip";
+            return "Xray-windows-64.zip";
+        }
+        if (os.contains("mac")) {
+            if (isArm64(arch))
+                return "Xray-macos-arm64-v8a.zip";
+            return "Xray-macos-64.zip";
+        }
+        if (os.contains("freebsd")) {
+            if (isArm64(arch))
+                return "Xray-freebsd-arm64-v8a.zip";
+            if (isArm32(arch))
+                return "Xray-freebsd-arm32-v7a.zip";
+            if (is32BitX86(arch))
+                return "Xray-freebsd-32.zip";
+            return "Xray-freebsd-64.zip";
+        }
+        if (os.contains("openbsd")) {
+            if (isArm64(arch))
+                return "Xray-openbsd-arm64-v8a.zip";
+            if (isArm32(arch))
+                return "Xray-openbsd-arm32-v7a.zip";
+            if (is32BitX86(arch))
+                return "Xray-openbsd-32.zip";
+            return "Xray-openbsd-64.zip";
+        }
+        // Linux (and unknown OSes) fall back to the linux assets
+        if (isArm64(arch))
+            return "Xray-linux-arm64-v8a.zip";
+        if (isArm32(arch))
+            return "Xray-linux-arm32-v7a.zip";
+        if (arch.contains("riscv64"))
+            return "Xray-linux-riscv64.zip";
+        if (arch.contains("ppc64le"))
+            return "Xray-linux-ppc64le.zip";
+        if (arch.contains("ppc64"))
+            return "Xray-linux-ppc64.zip";
+        if (arch.contains("s390x"))
+            return "Xray-linux-s390x.zip";
+        if (arch.contains("loongarch64") || arch.contains("loong64"))
+            return "Xray-linux-loong64.zip";
+        if (arch.contains("mips64le"))
+            return "Xray-linux-mips64le.zip";
+        if (arch.contains("mips64"))
+            return "Xray-linux-mips64.zip";
+        if (arch.contains("mips") && (arch.contains("le") || arch.endsWith("el")))
+            return "Xray-linux-mips32le.zip";
+        if (arch.contains("mips"))
+            return "Xray-linux-mips32.zip";
+        if (is32BitX86(arch))
+            return "Xray-linux-32.zip";
+        return "Xray-linux-64.zip";
+    }
+
+    private static boolean isArm64(String arch) {
+        return arch.contains("aarch64") || arch.contains("arm64");
+    }
+
+    private static boolean isArm32(String arch) {
+        return arch.startsWith("arm");
+    }
+
+    private static boolean is32BitX86(String arch) {
+        return arch.equals("x86") || arch.equals("i386") || arch.equals("i486")
+                || arch.equals("i586") || arch.equals("i686");
     }
 
     private static String latestAssetUrl(String assetName) throws IOException {
